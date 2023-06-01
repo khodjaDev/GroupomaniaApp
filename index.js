@@ -1,14 +1,24 @@
-import path from 'path'
-
+const path = require('path')
 const express = require('express');
 const dotenv = require('dotenv')
 dotenv.config({path: './config/.env'})
 const app = express();
+const bodyParser = require('body-parser')
+const apiRoutes = require('./routes/api/apiRoute')
+const pageRoutes = require('./routes/pages/pagesRoutes')
 
-app.get('/', (req, res) => {
-    // res.send('<h1>Hello Express!</h1>')
-    res.sendFile(path.resolve(__dirname, 'static', 'index.html'))
-})
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }))
+// parse application/json
+app.use(bodyParser.json())
+
+// set the view engine to ejs
+app.set('view engine', 'ejs');
+
+// use route 
+app.use('/', apiRoutes)
+app.use('/', pageRoutes)
+
 
 app.listen(process.env.PORT, () => {
     console.log(`Listening on port ${process.env.PORT}`);
