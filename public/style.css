@@ -1,0 +1,15 @@
+.comment_container {
+    display: none;
+}
+
+.opened {
+    display: block;
+}
+
+#navLink {
+    display: flex;
+}
+
+#navLink li {
+    margin-inline-start: 1rem;
+}

@@ -5,13 +5,88 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Express App</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <link rel="stylesheet" href="style.css">        
 </head>
 <body>
     <h1>Hello Express!</h1>
-    <ul>
-        <li><a href="/">HOME</a></li>
-        <li><a href="/login">LOGIN</a></li>
-        <li><a href="/register">REGISTER</a></li>
+    <ul id="navLink">
+        <li><a href="/">ACCEUIL</a></li>
+        <li><a href="/login">SE CONNECTER</a></li>
+        <li><a href="/register">REJOINDRE</a></li>
+        <li><form action="/logout" method="post">
+          <input type="submit" value="Déconnexion">
+        </form></li>
     </ul>
+    <% if(locals.message) { %>
+      <p style="background-color: green;"> <%= message %> </p>
+    <% } %>
+<% posts.forEach(post => { %>
+    <div class="col s12 m7 container" id="post<% post.idPost%>">
+        <h2 class="header"> <%= post.postTitle %> </h2>
+        <div class="card horizontal">
+          <% if(post.postImage) { %>
+            <div class="card-image">
+                <img src="<%= post.postImage %>">
+            </div>
+          <% } %> 
+          <div class="card-stacked">
+            <div class="card-content">
+              <p><%= post.postText %></p>
+            </div>
+            <div class="card-action">
+              <a href="#">This is a link</a>
+            </div>
+          </div>
+        </div>
+        <form action="/postDelete/<%= post.idPost %>" method="post">
+          <input type="submit" value="Supprimer">
+        </form>
+        <button class="commentBtn">comment</button>
+        <button> reply -> </button>
+        <form action="/comment" method="post">
+          <input type="hidden" name="comment_idPost" value="<%= post.idPost %>">
+          <input type="text" name="commentText">
+          <input type="text" name="commentImage">
+          <button type="submit"> Send </button>
+        </form>
+        <!--  <button><a href="/postDelete/<%= post.idPost %>"></a></button> -->
+        <!-- result.idComment.forEach(comment => {  -->
+          
+          <% comments.forEach(comment => { %>
+            <% if (post.idPost === comment.comment_idPost) { %>
+          
+              <div class="col s12 m7 container comment_container" dataset="post<% post.idPost%>">
+                <!-- <h2 class="header"> <%= post.postTitle %> </h2> -->
+                <div class="card horizontal">
+                  <% if(comment.commentImage) { %>
+                    <div class="card-image">
+                        <img src="<%= comment.commentImage %>" alt="">
+                    </div>
+                  <% } %> 
+                  <div class="card-stacked">
+                    <div class="card-content">
+                      <p> <%= comment.commentText %></p>
+                    </div>
+                    <div class="card-action">
+                      <a href="#">This is a link</a>
+                    </div>
+                  </div>
+                </div>
+                <form action="/commentDelete/<%= comment.idComment %>" method="post">
+                  <input type="submit" value="Supprimer">
+                </form>
+                <button class="commentBtn">comment</button>
+                
+                <!--  <button><a href="/postDelete/<%= post.idPost %>"></a></button> -->
+              </div>
+              <% } %>
+          <% }) %>
+    </div>
+<% }) %>
 </body>
+<script src="home.js"></script>
 </html>
