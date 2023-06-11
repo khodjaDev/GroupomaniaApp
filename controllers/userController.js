@@ -1,12 +1,15 @@
 const db = require('../config/dbConnection')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const { promisify } = require('util')
 
 
 exports.register = (req, res) => {
     
     const {email, lastName, firstName, password, photoProfil} = req.body
-    const newUser = {email, lastName, firstName, password, photoProfil}
+
+    const bothNames = lastName + ' ' + firstName
+    const newUser = {email, lastName, firstName, bothNames, password, photoProfil}
 
     db.query('INSERT INTO user SET ?', newUser, (error, result) => {
         if (error) {
@@ -26,11 +29,15 @@ exports.login = (req, res) => {
 
     const {email, password} = req.body
 
-    db.query('SELECT * FROM user WHERE email = ?', email, (error, result) => {
+    db.query('SELECT * FROM user WHERE email = ?', email, async (error, result) => {
         
         if(error) {
             console.log(error)
             res.status(401).json({error: 'error'})
+        }
+
+        if (!result.length) {
+            res.status(401).json({ message: 'This user doesn\'t exist.'})
         }
 
         if (!email || !password) {
@@ -39,7 +46,7 @@ exports.login = (req, res) => {
         } else if(!result || !(bcrypt.compare(password, result[0].password))) {
             res.status(401).json({ error: 'Email or password is not valid.' })
         } else {
-            id = result.idUser
+            id = result[0].idUser
             const token = jwt.sign({id}, process.env.JWT_SECRET, {
                 expiresIn: process.env.JWT_EXPIRES
             }) 
@@ -53,6 +60,7 @@ exports.login = (req, res) => {
             }
 
             res.cookie('jwtCookie', token, cookieOption)
+
             res.status(200).redirect('/')
         }
     })
@@ -66,3 +74,57 @@ exports.logout = (req, res) => {
 
     res.status(200).redirect('/')
 }
+
+exports.me = (req, res) => {
+    const id = req.params.id
+   db.query('SELECT * FROM user WHERE idUser = ?', id, (req, res) => {
+    if (error) {
+        console.log(error)
+        res.status(401).json({ error: 'Error'})
+    } else {
+        res.status(200).json({ message: 'Success'})
+    }
+   })
+}
+
+ exports.isLoggedIn = async (req, res, next) => {
+    if ( req.cookies.jwtCookie ) {
+        try {
+            const decoded = await promisify(jwt.verify)(req.cookies.jwtCookie, process.env.JWT_SECRET
+                )
+            
+                console.log(decoded)
+            const id = decoded.id
+            
+            db.query('SELECT * FROM user WHERE idUser = ?', id, (error, result) => {
+                    try {
+                        if (!result) {
+                            res.status(401).json({ message : 'Your token match with no user.'})
+                        } 
+
+                        req.user = result[0]
+                        // console.log(req.user);
+
+                    } catch (error) {
+                        console.log(error)
+                        res.status(401).json({ error : 'Error'})
+                    }
+                })
+            
+        } catch (error) {
+            console.log(error)
+            res.status(401).json({ error : 'Error'})
+        }
+    }
+    next()
+    // if (req.cookies.jwtCookie) {
+    //     const token = req.cookies.jwtCookie
+    //     console.log(token)
+
+    //     const tokenValue = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString())
+    //     console.log(tokenValue)
+    // }
+     
+ }
+
+
